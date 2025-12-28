@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+faster-whisper
+ctranslate2
+celery[redis]
+pydantic
+litellm
+python-dotenv
+python-multipart

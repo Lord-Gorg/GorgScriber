@@ -1,0 +1,55 @@
+services:
+  gradio-ui:
+    build: ./ui
+    ports:
+      - "7860:7860"
+    environment:
+      - WHISPER_API_URL=http://whisper-api:8000
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - uploads:/app/uploads
+      - ./.env:/app/.env:ro
+    depends_on:
+      - whisper-api
+      - redis
+
+  whisper-api:
+    build: ./api
+    environment:
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - uploads:/app/uploads
+      - ./.env:/app/.env:ro
+      - models:/root/.cache/huggingface/hub
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+  celery-worker:
+    build: ./api
+    command: celery -A tasks worker --loglevel=info -c 2
+    volumes:
+      - uploads:/app/uploads
+      - ./.env:/app/.env:ro
+      - models:/root/.cache/huggingface/hub
+    depends_on:
+      - redis
+      - whisper-api
+
+  celery-beat:
+    build: ./api
+    command: celery -A tasks beat --loglevel=info
+    volumes:
+      - ./.env:/app/.env:ro
+    depends_on:
+      - redis
+      - celery-worker
+
+volumes:
+  uploads:
+  redis_data:
+  models:

@@ -1,0 +1,4 @@
+gradio
+httpx
+pydantic
+python-dotenv
